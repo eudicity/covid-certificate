@@ -1,11 +1,11 @@
+import { HCertJSON } from './jsonTypes'
+
 /**
  * Electronic Health Certificate Specification
  *
  */
 export type HealthCertificate = {
-  kid: string;
-  alg: Algorithm;
-  issuer: string;
+  issuerCountry: string;
   expirationDate: Date;
   issuedAt: Date;
   dateOfBirth: string;
@@ -14,7 +14,11 @@ export type HealthCertificate = {
   tests: Array<TestCertificate>;
   recovered: Array<RecoveredCertificate>;
   version: string;
+  type: Type;
+  json: HCertJSON;
 };
+
+export type Type = "v" | "t" | "r";
 
 export type Name = {
   surname: string;

@@ -1,61 +1,37 @@
-import { findCertificateData } from "../issuer/findCertificateData";
-import { createPublicKey } from "../issuer/createPublicKey";
+import * as x509 from "@peculiar/x509";
 import {
   Valid,
   VerificationError,
   VerificationResult,
 } from "./VerificationResult";
+import { IssuerCertificateData } from "../issuer/certificates";
 import ECDS256SignatureVerifier from "../cose/ECDS256SignatureVerifier";
-import ChainValidator from "../validate/ChainValidator";
-import KnownAlgorithmValidator from "../validate/cose/KnownAlgorithmValidator";
-import HasKidValidator from "../validate/cose/HasKidValidator";
 import { SingleSignedMessage } from "../cose/SingleSignedMessage";
-import { extractKid } from "../cose/header/headers";
 
 export const verifySignature = (
-  certificate: SingleSignedMessage
+  certificate: SingleSignedMessage,
+  issuerCert: IssuerCertificateData,
+  validationClock: Date = new Date()
 ): VerificationResult => {
-  // Validate COSE message
-  const validator = new ChainValidator([
-    new KnownAlgorithmValidator(),
-    new HasKidValidator(),
-  ]);
 
-  const validationResult = validator.validate(certificate);
+  const x509cert = new x509.X509Certificate(issuerCert.rawData);
 
-  if (!validationResult.isValid()) {
-    return new VerificationError(
-      "COSE is not valid: " + validationResult.getMessage()
-    );
-  }
-
-  // Find issuer certificate
-  let kid: string;
-  try {
-    kid = extractKid(
-      certificate.getProtectedHeaders(),
-      certificate.getUnprotectedHeaders()
-    );
-  } catch (error) {
-    return new VerificationError(
-      "There is no kid found in the headers of the cose message"
-    );
-  }
-
-  const issuerCert = findCertificateData(kid);
-
-  if (issuerCert === null) {
-    return new VerificationError("Unknown Issuer certificate with kid " + kid);
+  if (
+    x509cert.notBefore > validationClock ||
+    x509cert.notAfter < validationClock
+  ) {
+    return new VerificationError("Certificate is not valid")
   }
 
   const sigVerifier = new ECDS256SignatureVerifier();
   const verificationResult = sigVerifier.verify(
     certificate,
-    createPublicKey(issuerCert)
+    x509cert.publicKey.rawData
   );
 
-  if (!verificationResult)
+  if (!verificationResult) {
     return new VerificationError("Signature is tempered");
+  }
 
   return new Valid();
 };

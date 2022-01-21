@@ -1,6 +1,7 @@
 import { SingleSignedMessage } from "../cose/SingleSignedMessage";
 import {
   HealthCertificate,
+  Type,
   RecoveredCertificate,
   TestCertificate,
   TestResult,
@@ -12,12 +13,11 @@ import ChainValidator from "../validate/ChainValidator";
 import PayloadValidator from "../validate/dcc/PayloadValidator";
 import DccJsonValidator from "../validate/dcc/DccJsonValidator";
 import { HCertJSON, TestResultJSON } from "../health-certificate/jsonTypes";
-import { extractAlgorithm, extractKid } from "../cose/header/headers";
 import {
-  translateAlgorithm,
   translateTarget,
   translateVaccineType,
 } from "./translate";
+import { ValueSetsObject } from "../value-sets/ValueSets"
 
 /**
  * Parse a single signed COSE message
@@ -25,7 +25,8 @@ import {
  * @param message
  */
 export const parseCoseCertificate = (
-  message: SingleSignedMessage
+  message: SingleSignedMessage,
+  valueSets?: ValueSetsObject
 ): HealthCertificate => {
   // should be data as specified in https://github.com/ehn-dcc-development/hcert-spec
   const data = decode(message.getPayload());
@@ -47,12 +48,6 @@ export const parseCoseCertificate = (
   const hcertData: HCertJSON = data.get(-260).get(1);
 
   return {
-    alg: translateAlgorithm(
-      extractAlgorithm(
-        message.getProtectedHeaders(),
-        message.getUnprotectedHeaders()
-      )
-    ),
     expirationDate: new Date(data.get(4) * 1000),
     issuedAt: new Date(data.get(6) * 1000),
     dateOfBirth: hcertData.dob,
@@ -60,24 +55,40 @@ export const parseCoseCertificate = (
       surname: hcertData.nam.fnt,
       givenName: hcertData.nam.gnt,
     },
-    issuer: data.get(1),
-    kid: extractKid(
-      message.getProtectedHeaders(),
-      message.getUnprotectedHeaders()
-    ),
-    recovered: convertRecoveredData(hcertData),
-    tests: convertTestData(hcertData),
-    vaccinations: convertVaccinationData(hcertData),
+    issuerCountry: data.get(1).toString(),
+    recovered: convertRecoveredData(hcertData, valueSets),
+    tests: convertTestData(hcertData, valueSets),
+    vaccinations: convertVaccinationData(hcertData, valueSets),
     version: hcertData.ver,
+    type: getType(hcertData),
+    json: hcertData,
   };
 };
+
+/**
+  * Returns type of certificate
+  *
+  * @param data
+  */
+const getType = (data: HCertJSON): Type => {
+  if (data.v) {
+    return 'v'
+  }
+  if (data.r) {
+    return 'r'
+  }
+  return 't'
+}
 
 /**
  * Convert recovered data into an array of RecoveredCertificate's
  *
  * @param data
  */
-const convertRecoveredData = (data: HCertJSON): Array<RecoveredCertificate> => {
+const convertRecoveredData = (
+  data: HCertJSON,
+  valueSets: ValueSetsObject
+): Array<RecoveredCertificate> => {
   if (!data.r) {
     return [];
   }
@@ -85,7 +96,7 @@ const convertRecoveredData = (data: HCertJSON): Array<RecoveredCertificate> => {
   return data.r.map((r) => {
     return {
       id: r.ci,
-      target: translateTarget(r.tg),
+      target: translate(valueSets["disease-agent-target"], r.tg),
       firstDetectedDate: new Date(r.fr),
       countryOfTest: r.co,
       issuer: r.is,
@@ -96,7 +107,8 @@ const convertRecoveredData = (data: HCertJSON): Array<RecoveredCertificate> => {
 };
 
 const convertVaccinationData = (
-  data: HCertJSON
+  data: HCertJSON,
+  valueSets: ValueSetsObject
 ): Array<VaccinationCertificate> => {
   if (!data.v) {
     return [];
@@ -104,10 +116,10 @@ const convertVaccinationData = (
 
   return data.v.map((v) => {
     return {
-      target: translateTarget(v.tg),
-      vaccineType: translateVaccineType(v.vp),
-      medicinalProduct: v.mp,
-      manufacturer: v.ma,
+      target: translate(valueSets["disease-agent-target"], v.tg),
+      vaccineType: translate(valueSets["sct-vaccines-covid-19"], v.vp),
+      medicinalProduct: translate(valueSets["vaccines-covid-19-names"], v.mp),
+      manufacturer: translate(valueSets["vaccines-covid-19-auth-holders"], v.ma),
       doseNumber: v.dn,
       totalDoses: v.sd,
       date: new Date(v.dt),
@@ -118,22 +130,22 @@ const convertVaccinationData = (
   });
 };
 
-const convertTestData = (data: HCertJSON): Array<TestCertificate> => {
+const convertTestData = (
+  data: HCertJSON,
+  valueSets: ValueSetsObject
+): Array<TestCertificate> => {
   if (!data.t) {
     return [];
   }
 
   return data.t.map((t) => {
     return {
-      target: translateTarget(t.tg),
-      testType: t.tt,
+      target: translate(valueSets["disease-agent-target"], t.tg),
+      testType: translate(valueSets["covid-19-lab-test-type"], t.tt),
       name: t.nm || "",
-      manufacturer: t.ma || "",
+      manufacturer: translate(valueSets["covid-19-lab-test-manufacturer-and-name"], t.ma),
       date: new Date(t.sc),
-      result:
-        t.tr === TestResultJSON.Detected
-          ? TestResult.Detected
-          : TestResult.Undetected,
+      result: translate(valueSets["covid-19-lab-result"], t.tr),
       testingCentre: t.tc || "",
       country: t.co,
       issuer: t.is,
@@ -141,3 +153,7 @@ const convertTestData = (data: HCertJSON): Array<TestCertificate> => {
     };
   });
 };
+
+const translate = (set: string, value: string = "") => {
+  return set[value].display || value
+}

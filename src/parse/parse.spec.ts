@@ -7,7 +7,6 @@ describe("Health certificate", () => {
     );
 
     expect(hcert).toEqual({
-      alg: "ECDSA-256",
       expirationDate: new Date("2022-01-28T07:47:53.000Z"),
       issuedAt: new Date("2021-05-29T19:21:13.000Z"),
       dateOfBirth: "1964-08-12",
@@ -15,8 +14,7 @@ describe("Health certificate", () => {
         surname: "MUSTERMANN",
         givenName: "ERIKA",
       },
-      issuer: "DE",
-      kid: "DEsVUSvpFAE=",
+      issuerCountry: "DE",
       recovered: [],
       tests: [],
       vaccinations: [
@@ -34,6 +32,31 @@ describe("Health certificate", () => {
         },
       ],
       version: "1.0.0",
+      type: "v",
+      json: {
+        "dob": "1964-08-12",
+        "nam": {
+          "fn": "Mustermann",
+          "fnt": "MUSTERMANN",
+          "gn": "Erika",
+          "gnt": "ERIKA"
+        },
+        "v": [
+          {
+            "ci": "URN:UVCI:01DE/IZ12345A/5CWLU12RNOB9RXSEOP6FG8#W",
+            "co": "DE",
+            "dn": 1,
+            "dt": "2021-05-29",
+            "is": "Robert Koch-Institut",
+            "ma": "ORG-100031184",
+            "mp": "EU/1/20/1507",
+            "sd": 2,
+            "tg": "840539006",
+            "vp": "1119349007"
+          }
+        ],
+        "ver": "1.0.0"
+      }
     });
   });
 
@@ -42,12 +65,10 @@ describe("Health certificate", () => {
       "HC1:6BFOXN*TS0BI$ZD-PHQ7I9AD66V5B22CH9M9ESI9XBHXK-%69LQOGI.*V76GCV4*XUA2P-FHT-HNTI4L6N$Q%UG/YL WO*Z7ON15 BM0VM.JQ$F4W17PG4.VAS5EG4V*BRL0K-RDY5RWOOH6PO9:TUQJAJG9-*NIRICVELZUZM9EN9-O9:PICIG805CZKHKB-43.E3KD3OAJ6*K6ZCY73JC3KD3ZQTWD3E.KLC8M3LP-89B9K+KB2KK3M*EDZI9$JAQJKKIJX2MM+GWHKSKE MCAOI8%MCU5VTQDPIMQK9*O7%NC.UTWA6QK.-T3-SY$NCU5CIQ 52744E09TBOC.UKMI$8R+1A7CPFRMLNKNM8JI0JPGN:0K7OOBRLY667SYHJL9B7VPO:SWLH1/S4KQQK0$5REQT5RN1FR%SHPLRKWJO8LQ84EBC$-P4A0V1BBR5XWB3OCGEK:$8HHOLQOZUJ*30Q8CD1";
 
     expect(parse(cert)).toMatchObject({
-      alg: "ECDSA-256",
       dateOfBirth: "1964-08-12",
       expirationDate: new Date(1643356073 * 1000),
       issuedAt: new Date(1622316073 * 1000),
-      issuer: "DE",
-      kid: "DEsVUSvpFAE=",
+      issuerCountry: "DE",
       name: { givenName: "ERIKA", surname: "MUSTERMANN" },
       recovered: [
         {
@@ -63,6 +84,28 @@ describe("Health certificate", () => {
       tests: [],
       vaccinations: [],
       version: "1.0.0",
+      type: "r",
+      json: {
+        "dob": "1964-08-12",
+        "nam": {
+          "fn": "Mustermann",
+          "fnt": "MUSTERMANN",
+          "gn": "Erika",
+          "gnt": "ERIKA"
+        },
+        "r": [
+          {
+            "ci": "URN:UVCI:01DE/5CWLU12RNOB9RXSEOP6FG8#W",
+            "co": "DE",
+            "df": "2021-05-29",
+            "du": "2021-06-15",
+            "fr": "2021-01-10",
+            "is": "Robert Koch-Institut",
+            "tg": "840539006"
+          }
+        ],
+        "ver": "1.0.0"
+      }
     });
   });
 });

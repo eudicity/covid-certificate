@@ -5,6 +5,7 @@ import {
   CoseSignature,
   CoseUnprotectedHeaders,
 } from "./cose";
+import { Algorithm } from "../health-certificate/HealthCertificate";
 
 /**
  * A single signed COSE message
@@ -13,6 +14,8 @@ import {
 export class SingleSignedMessage {
   private unprotectedHeaders: CoseUnprotectedHeaders;
   private protectedHeaders: CoseProtectedHeaders;
+  private kid: string;
+  private algorithm: Algorithm;
   private payload: CosePayload;
   private signature: CoseSignature;
 
@@ -39,6 +42,22 @@ export class SingleSignedMessage {
 
   setProtectedHeaders(protectedHeaders: Buffer) {
     this.protectedHeaders = protectedHeaders;
+  }
+
+  getKid(): string {
+    return this.kid;
+  }
+
+  setKid(kid: string) {
+    this.kid = kid;
+  }
+
+  getAlgorithm(): Algorithm {
+    return this.algorithm;
+  }
+
+  setAlgorithm(algorithm: Algorithm) {
+    this.algorithm = algorithm;
   }
 
   getPayload(): Buffer {
