@@ -1,4 +1,4 @@
-import { HCertJSON } from './jsonTypes'
+import { HCertJSON } from './jsonTypes';
 
 /**
  * Electronic Health Certificate Specification
@@ -26,8 +26,8 @@ export type Name = {
 };
 
 export type VaccinationCertificate = {
-  target: Target;
-  vaccineType: VaccineType;
+  target: string;
+  vaccineType: string;
   medicinalProduct: string;
   manufacturer: string;
   doseNumber: number;
@@ -38,18 +38,13 @@ export type VaccinationCertificate = {
   id: string;
 };
 
-export enum TestResult {
-  Detected = "DETECTED",
-  Undetected = "UNDETECTED",
-}
-
 export type TestCertificate = {
-  target: Target;
+  target: string;
   testType: string;
   name: string;
   manufacturer: string;
   date: Date;
-  result: TestResult;
+  result: string;
   testingCentre: string;
   country: string;
   issuer: string;
@@ -58,7 +53,7 @@ export type TestCertificate = {
 
 export type RecoveredCertificate = {
   id: string;
-  target: Target;
+  target: string;
   firstDetectedDate: Date;
   countryOfTest: string;
   issuer: string;
@@ -66,19 +61,9 @@ export type RecoveredCertificate = {
   dateValidUntil: Date;
 };
 
-export enum Target {
-  "COVID-19" = "COVID-19",
-}
-
-export enum VaccineType {
-  "MRNA" = "MRNA",
-  "ANTIGEN" = " ANTIGEN",
-  "GENERAL" = "GENERAL",
-}
-
 export enum Algorithm {
   /**
    * Elliptic curve digital signing algorithm with sha256 hash
    */
   "ECDSA-256" = "ECDSA-256",
-}
+};

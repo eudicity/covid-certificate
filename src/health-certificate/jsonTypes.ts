@@ -15,8 +15,8 @@ export type Name = {
 };
 
 export type VaccinatedCertificateJSON = {
-  tg: TargetJSON;
-  vp: VaccineTypeJSON;
+  tg: string;
+  vp: string;
   mp: string;
   ma: string;
   dn: number;
@@ -31,37 +31,21 @@ export type RecoveredCertificateJSON = {
   ci: string;
   is: string;
   co: string;
-  tg: TargetJSON;
+  tg: string;
   fr: string;
   df: string;
   du: string;
 };
 
 export type TestCertificateJSON = {
-  tg: TargetJSON;
+  tg: string;
   tt: string;
   nm?: string;
   ma?: string;
   sc: string;
-  tr: TestResultJSON;
+  tr: string;
   tc?: string;
   co: string;
   is: string;
   ci: string;
 };
-
-// see: https://github.com/ehn-dcc-development/ehn-dcc-valuesets
-export enum TestResultJSON {
-  Detected = "260373001",
-  Undetected = "260415000",
-}
-
-export enum TargetJSON {
-  "COVID-19" = "840539006",
-}
-
-export enum VaccineTypeJSON {
-  "SARS-CoV-2 mRNA vaccine" = "1119349007",
-  "SARS-CoV-2 antigen vaccine" = "1119305005",
-  "covid-19 vaccines" = "J07BX03",
-}

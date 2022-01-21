@@ -6,3 +6,7 @@ export * from "./cose/SingleSignedMessage";
 export * from "./parse/parse";
 export * from "./parse/parseCoseCertificate";
 export * from "./health-certificate/HealthCertificate";
+export * from "./business-rules/BusinessRule"
+export * from "./business-rules/BusinessRuleCheckResult"
+export * from "./business-rules/checkForBusinessRules"
+export * from "./value-sets/ValueSets"

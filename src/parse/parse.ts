@@ -1,6 +1,7 @@
 import { HealthCertificate } from "../health-certificate/HealthCertificate";
 import { readCertificate } from "./readCertificate";
 import { parseCoseCertificate } from "./parseCoseCertificate";
+import { ValueSetsObject } from "../value-sets/ValueSets"
 
 /**
  * Parse certificate string
@@ -15,6 +16,9 @@ import { parseCoseCertificate } from "./parseCoseCertificate";
  *
  * @param certificate
  */
-export const parse = (certificate: string): HealthCertificate => {
-  return parseCoseCertificate(readCertificate(certificate));
+export const parse = (
+  certificate: string,
+  valueSets: ValueSetsObject
+): HealthCertificate => {
+  return parseCoseCertificate(readCertificate(certificate), valueSets);
 };

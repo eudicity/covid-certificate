@@ -4,7 +4,6 @@ import {
   Type,
   RecoveredCertificate,
   TestCertificate,
-  TestResult,
   VaccinationCertificate,
 } from "../health-certificate/HealthCertificate";
 import { decode } from "cbor";
@@ -12,12 +11,8 @@ import { schema } from "../validate/dcc/DCC-json-schema";
 import ChainValidator from "../validate/ChainValidator";
 import PayloadValidator from "../validate/dcc/PayloadValidator";
 import DccJsonValidator from "../validate/dcc/DccJsonValidator";
-import { HCertJSON, TestResultJSON } from "../health-certificate/jsonTypes";
-import {
-  translateTarget,
-  translateVaccineType,
-} from "./translate";
-import { ValueSetsObject } from "../value-sets/ValueSets"
+import { HCertJSON } from "../health-certificate/jsonTypes";
+import { ValueSetsObject, ValueSetObject } from "../value-sets/ValueSets";
 
 /**
  * Parse a single signed COSE message
@@ -72,12 +67,12 @@ export const parseCoseCertificate = (
   */
 const getType = (data: HCertJSON): Type => {
   if (data.v) {
-    return 'v'
+    return "v";
   }
   if (data.r) {
-    return 'r'
+    return "r";
   }
-  return 't'
+  return "t";
 }
 
 /**
@@ -96,7 +91,7 @@ const convertRecoveredData = (
   return data.r.map((r) => {
     return {
       id: r.ci,
-      target: translate(valueSets["disease-agent-target"], r.tg),
+      target: translate(valueSets, "disease-agent-target", r.tg),
       firstDetectedDate: new Date(r.fr),
       countryOfTest: r.co,
       issuer: r.is,
@@ -116,10 +111,10 @@ const convertVaccinationData = (
 
   return data.v.map((v) => {
     return {
-      target: translate(valueSets["disease-agent-target"], v.tg),
-      vaccineType: translate(valueSets["sct-vaccines-covid-19"], v.vp),
-      medicinalProduct: translate(valueSets["vaccines-covid-19-names"], v.mp),
-      manufacturer: translate(valueSets["vaccines-covid-19-auth-holders"], v.ma),
+      target: translate(valueSets, "disease-agent-target", v.tg),
+      vaccineType: translate(valueSets, "sct-vaccines-covid-19", v.vp),
+      medicinalProduct: translate(valueSets, "vaccines-covid-19-names", v.mp),
+      manufacturer: translate(valueSets, "vaccines-covid-19-auth-holders", v.ma),
       doseNumber: v.dn,
       totalDoses: v.sd,
       date: new Date(v.dt),
@@ -140,12 +135,12 @@ const convertTestData = (
 
   return data.t.map((t) => {
     return {
-      target: translate(valueSets["disease-agent-target"], t.tg),
-      testType: translate(valueSets["covid-19-lab-test-type"], t.tt),
+      target: translate(valueSets, "disease-agent-target", t.tg),
+      testType: translate(valueSets, "covid-19-lab-test-type", t.tt),
       name: t.nm || "",
-      manufacturer: translate(valueSets["covid-19-lab-test-manufacturer-and-name"], t.ma),
+      manufacturer: translate(valueSets, "covid-19-lab-test-manufacturer-and-name", t.ma),
       date: new Date(t.sc),
-      result: translate(valueSets["covid-19-lab-result"], t.tr),
+      result: translate(valueSets, "covid-19-lab-result", t.tr),
       testingCentre: t.tc || "",
       country: t.co,
       issuer: t.is,
@@ -154,6 +149,9 @@ const convertTestData = (
   });
 };
 
-const translate = (set: string, value: string = "") => {
-  return set[value].display || value
+const translate = (sets: ValueSetsObject, setId: string, value: string = "") => {
+  if (sets && sets[setId] && sets[setId][value] && sets[setId][value].display) {
+    return sets[setId][value].display
+  }
+  return value;
 }
